@@ -1,0 +1,181 @@
+<!DOCTYPE HTML>
+<!--
+	Phantom by HTML5 UP
+	html5up.net | @ajlkn
+	Free for personal and commercial use under the CCA 3.0 license (html5up.net/license)
+-->
+<html>
+	<head>
+		<title>Baxter Robotics Project</title>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<!--[if lte IE 8]><script src="assets/js/ie/html5shiv.js"></script><![endif]-->
+		<link rel="stylesheet" href="assets/css/main.css" />
+		<!--[if lte IE 9]><link rel="stylesheet" href="assets/css/ie9.css" /><![endif]-->
+		<!--[if lte IE 8]><link rel="stylesheet" href="assets/css/ie8.css" /><![endif]-->
+		<link rel="stylesheet" href="assets/css/highlight/androidstudio.css">
+		<script src="assets/js/highlight.pack.js"></script>
+		<script>hljs.initHighlightingOnLoad();</script>
+	</head>
+	<body>
+		<!-- Wrapper -->
+			<div id="wrapper">
+
+				<!-- Header -->
+					<header id="header">
+						<div class="inner">
+
+							<!-- Logo -->
+								<a href="index.html" class="logo">
+									<span class="symbol"><img src="images/logo.svg" alt="" /></span><span class="title">Hao Xie</span>
+								</a>
+
+							<!-- Nav -->
+								<nav>
+									<ul>
+										<li><a href="#menu">Menu</a></li>
+									</ul>
+								</nav>
+
+						</div>
+					</header>
+
+				<!-- Menu -->
+					<nav id="menu">
+						<h2>Menu</h2>
+						<ul>
+							<li><a href="index.html">Home</a></li>
+							<li><a href="descriptions.html">Project Descriptions</a></li>
+							<li><a href="generic.html">Tempus etiam</a></li>
+							<li><a href="descriptions.html">Project Descriptions</a></li>
+							<li><a href="contact.html">Contact Me</a></li>
+						</ul>
+					</nav>
+
+				<!-- Main -->
+					<div id="main">
+						<div class="inner">
+							<a href="https://www.youtube.com/watch?v=mGAH9TX7k60">
+								<h1>Baxter Robotics Project</h1>
+							</a>
+							<span class="image main"><img src="images/baxterRobot.jpg" alt="" /></span>
+							<p>Image Credit: 
+							<a href="http://www.rethinkrobotics.com/press">
+							Rethink Robotics
+							</a>, 
+							<a href="https://www.flickr.com/photos/jurvetson/8000143255/in/photolist-eeaNLg-kQNFcj-dbWPSp-fLjpBC-egwPJT-fL2Nz2-fLjpiU-pb2pjT-fLjpSq-7KxKak-xpsiMs-madHzR-maeqR6-madEN8-mafnid-maesNn-madJYT-mafpRu-mafkU1-madEhD-madG9V-madHc6-49rZUS">
+							Steve Jurvetson/Flickr
+							</a>
+							</p>
+							<p>The idea of this project is to give command to the robot to open a jar. When being commanded, the robot will use cameras on its grippers to search for the circular lid of jar while calculating the relative position. After calculation, the robot will catch the lid and rotate its gripper to open it.</p>
+							<p>The identification for lid is using the classic hough circle detection algorithm. The source code can be find on <a href="https://github.com/hx462/Baxter-open-jar">my Github.</a></p>
+							<iframe width="560" height="315" src="https://www.youtube.com/embed/mGAH9TX7k60" frameborder="0" allowfullscreen></iframe>
+							<pre><code class="python">
+    def hough(self, iteration):
+        print('Applying Hough...')
+        gray_image = cv.CreateImage((self.width, self.height), 8 , 1)
+        cv.CvtColor(self.cv_image, gray_image, cv.CV_BGR2GRAY)
+        gray_array = self.cv2array(gray_image)
+        cv2.GaussianBlur(gray_array, (5, 5), 0)
+
+        circles = cv2.HoughCircles(gray_array, cv.CV_HOUGH_GRADIENT, 1, 40, param1=50, //
+        			   param2=self.hough_accumulator, minRadius=self.hough_min_radius, //
+        			   maxRadius=self.hough_max_radius)
+
+        if circles is None:
+            sys.exit('Error in hough(), no lid found')
+
+        circles = numpy.uint16(numpy.around(circles))
+        circle_data = {}
+        n_circles = 0
+        circle_array = numpy.asarray(self.cv_image)
+
+        for i in circles[0,:]:
+            cv2.circle(circle_array, (i[0], i[1]), i[2], (0, 255, 0), 2)
+            cv2.circle(circle_array, (i[0], i[1]), 2, (0, 255, 0), 3)
+            circle_data[n_circles] = (i[0], i[1], i[2])
+            n_circles += 1
+
+        circle_image = cv.fromarray(circle_array)
+        cv.ShowImage("Hough Circle", circle_image)
+        cv.WaitKey(3)
+
+        if n_circles == 0:
+            sys.exit('Error in hough(), no lid found')
+
+        lid = self.find_lid(circle_data, iteration)
+        return lid
+
+    def baxter_ik_move(self, limb, pose):
+        print('Moving arm...')
+        arm = moveit_commander.MoveGroupCommander(limb + '_arm')
+        goal_pose = PoseStamped()
+        goal_pose.header.frame_id = 'base'
+        goal_pose.pose.position.x = pose[0]
+        goal_pose.pose.position.y = pose[1]
+        goal_pose.pose.position.z = pose[2]
+        goal_pose.pose.orientation.x = pose[3]
+        goal_pose.pose.orientation.y = pose[4]
+        goal_pose.pose.orientation.z = pose[5]
+        goal_pose.pose.orientation.w = pose[6]
+
+        arm.set_pose_target(goal_pose)
+        arm.set_start_state_to_current_state()
+        plan = arm.plan()
+        arm.execute(plan)
+
+        if self.limb == limb:
+            quaternion_pose = self.limb_interface.endpoint_pose()
+            position = quaternion_pose['position']
+            self.pose = [position[0], position[1], self.pose[2], self.pose[3], self.pose[4], self.pose[5], self.pose[6]]
+
+        rospy.sleep(5.0)
+							</code></pre>
+						</div>
+					</div>
+
+				<!-- Footer -->
+					<footer id="footer">
+						<div class="inner">
+							<section>
+								<h2>Get in touch</h2>
+								<form method="post" action="mailto:hx462@nyu.edu" enctype="text/plain">
+									<div class="field half first">
+										<input type="text" name="name" id="name" placeholder="Name" />
+									</div>
+									<div class="field half">
+										<input type="email" name="email" id="email" placeholder="Email" />
+									</div>
+									<div class="field">
+										<textarea name="message" id="message" placeholder="Message"></textarea>
+									</div>
+									<ul class="actions">
+										<li><input type="submit" value="Send" class="special" /></li>
+									</ul>
+								</form>
+							</section>
+							<section>
+								<h2>Follow</h2>
+								<ul class="icons">
+									<li><a href="https://www.linkedin.com/in/hao-xie-hx462" class="icon style2 fa-linkedin"><span class="label">LinkedIn</span></a></li>
+									<li><a href="https://github.com/hx462" class="icon style2 fa-github"><span class="label">GitHub</span></a></li>
+									<li><a href="mailto:hx462@nyu.edu?Subject=Link%20from%20portfolio" class="icon style2 fa-envelope-o"><span class="label">Email</span></a></li>
+								</ul>
+							</section>
+							<ul class="copyright">
+								<li>&copy; hx462. All rights reserved</li><li>Design: <a href="http://html5up.net">HTML5 UP</a></li>
+							</ul>
+						</div>
+					</footer>
+
+			</div>
+
+		<!-- Scripts -->
+			<script src="assets/js/jquery.min.js"></script>
+			<script src="assets/js/skel.min.js"></script>
+			<script src="assets/js/util.js"></script>
+			<!--[if lte IE 8]><script src="assets/js/ie/respond.min.js"></script><![endif]-->
+			<script src="assets/js/main.js"></script>
+
+	</body>
+</html>
