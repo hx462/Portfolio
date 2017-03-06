@@ -54,8 +54,9 @@
 				<!-- Main -->
 					<div id="main">
 						<div class="inner">
+              <h1>React Project</h1>
 							<a href="https://tic-tac-toe-hx462.herokuapp.com">
-								<h1>Tic Tac Toe Project</h1>
+								<h2>Tic Tac Toe Project</h2>
 							</a>
 							<span class="image main"><img src="images/react1.jpg" alt="" /></span>
 							<p>I have hosted my react app on 
@@ -290,6 +291,96 @@ function calculateWinner(squares) {
 
 export default App;
 							</code></pre>
+              <a href="https://react-stock-directory.herokuapp.com">
+                <h2>Company Lookup Directory</h2>
+              </a>
+              <p>After completing this simple tic-tac-toe game, I started to work on a slightly more complicated project which involves data access using REST services exposed by a Node.js server.
+              </p>
+              <span class="image article"><img src="images/react-node.jpg" alt="" /></span>
+              <p>Company directory is a sample application that allows you to look up stock information of tech companies by name or industry, view the details of a company, including market value, daily price range, fifty-two-week price range and its return over one year.</p>
+              <p>In this app, I built a look up directory for tech companies with some of their stock information. I first implemented the component hierarchy for the app in Reach as fllows:
+              </p>
+              <pre>
+- App
+    - HomePage
+        - Header
+        - SearchBar
+        - CompanyList
+            - CompanyIndustry
+    - CompanyPage
+        - Header
+        - CompanyDetails
+              </pre>
+              <p>This is a great pratice for me on Single Page Application(SPA). The "App" container will render the transition pages of the UI and only one page is displayed at any given time.
+              </p>
+              <p>After constructing the skeleton of the app, I started building the server data access code powered by Node.js. I have decided to go with Node.js because I was more familiar with it at that time. 
+              </p>
+              <p>Finally, I also tried to implement this app as a hybrid app in Cordova, but I haven't had time to test it.
+              </p>
+              <p>This app is hosted on 
+              <a href="https://react-stock-directory.herokuapp.com/">
+              heroku
+              </a>.
+              </p>
+              <p>A snippet of the code is shown here:</p>
+              <pre><code class="html">
+
+var Header = React.createClass({
+    render: function () {
+        return (
+            &lt;header className="bar bar-nav">
+                &lt;a href="#" className={"icon icon-left-nav pull-left" + (this.props.back==="true"?"":" hidden")}>&lt;/a&gt;
+                &lt;h1 className="title">{this.props.text}&lt;/h1&gt;
+            &lt;/header&gt;
+        );
+    }
+});
+
+var SearchBar = React.createClass({
+    searchHandler: function() {
+        this.props.searchHandler(this.refs.searchKey.getDOMNode().value);
+    },
+    render: function () {
+        return (
+            &lt;div className="bar bar-standard bar-header-secondary"&gt;
+                &lt;input type="search" ref="searchKey" onChange={this.searchHandler} value={this.props.searchKey}/&gt;
+            &lt;/div&gt;
+
+        );
+    }
+});
+
+var CompanyListItem = React.createClass({
+    render: function () {
+        return (
+            &lt;li className="table-view-cell media"&gt;
+                &lt;a href={"#companies/" + this.props.company.id}&gt;
+                    &lt;img className="media-object small pull-left" src={"pics/" + this.props.company.pic + ".jpg" }/&gt;
+                    {this.props.company.name}
+                    &lt;p&gt;{this.props.company.industry}&lt;/p&gt;
+                &lt;/a&gt;
+            &lt;/li&gt;
+        );
+    }
+});
+
+var CompanyList = React.createClass({
+    render: function () {
+        var items = this.props.companies.map(function (company) {
+            return (
+                &lt;CompanyListItem key={company.id} company={company} /&gt;
+            );
+        });
+        return (
+            &lt;ul  className="table-view"&gt;
+                {items}
+            &lt;/ul&gt;
+        );
+    }
+});
+
+              </code></pre>
+
 						</div>
 					</div>
 
