@@ -2393,6 +2393,10 @@
 
 /* Table */
 
+	#iframe1 iframe {
+			width: 100%;
+	}
+
 	.table-wrapper {
 		-webkit-overflow-scrolling: touch;
 		overflow-x: auto;
